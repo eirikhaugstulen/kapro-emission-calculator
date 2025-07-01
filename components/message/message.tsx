@@ -1,5 +1,4 @@
 import { CustomMessage } from '@/lib/ai';
-import { WeatherToolCard } from '@/components/weather-card';
 import { FindActivityIdToolCard } from '@/components/activity-card';
 import { CalculateEmissionToolCard } from '@/components/emission-card';
 import { marked } from 'marked';
@@ -209,10 +208,9 @@ MemoizedMarkdown.displayName = 'MemoizedMarkdown';
 
 type Props = {
     message: CustomMessage;
-    isLastMessage: boolean;
 };
 
-export const Message = ({ message, isLastMessage }: Props) => {
+export const Message = ({ message }: Props) => {
     const isUser = message.role === 'user';
 
     return (

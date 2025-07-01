@@ -14,7 +14,7 @@ export const getWeather = tool({
     inputSchema,
     outputSchema,
     description: 'Get the weather for a given city',
-    execute: async ({ city }) => {
+    execute: async () => {
         // mock data
         await new Promise(resolve => setTimeout(resolve, 3000));
 

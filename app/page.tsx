@@ -31,10 +31,6 @@ export default function Home() {
     }),
   });
 
-  const isLastMessage = (messageId: string) => {
-    return messageId === messages[messages.length - 1].id;
-  };
-
   const handleSubmit = (data: ActivitySubmission) => {
     setMessages([]);
     setSubmittedActivity(data);
@@ -53,7 +49,7 @@ export default function Home() {
         },
       });
     }
-  }, [submittedActivity]);
+  }, [submittedActivity, sendMessage]);
 
   return (
     <div className="h-screen p-8 flex flex-col">
@@ -75,7 +71,6 @@ export default function Home() {
                 <Message
                   key={message.id}
                   message={message}
-                  isLastMessage={isLastMessage(message.id)}
                 />
               ))}
 

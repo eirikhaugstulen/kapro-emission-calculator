@@ -1,4 +1,4 @@
-import { measurementSchema, rawMeasurementSchema, convertRawMeasurement } from "@/lib/measurements";
+import { rawMeasurementSchema, convertRawMeasurement } from "@/lib/measurements";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 

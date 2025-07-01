@@ -46,7 +46,6 @@ export const createCalculateEmissionTool = (metadata: Metadata) => tool({
         });
 
         const data = await result.json();
-        console.log(JSON.stringify(data, null, 2));
 
         if (data.error) {
             throw new Error(data.error_message);

@@ -4,7 +4,6 @@ import "./globals.css";
 import { Providers } from "@/components/providers";
 import { getQueryClient } from "@/components/providers/get-query-client";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

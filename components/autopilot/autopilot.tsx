@@ -2,6 +2,30 @@
 import { useQuery } from "@tanstack/react-query"
 import { ActivitySubmission } from "@/components/activity-form/activity-form"
 
+type EmissionFactor = {
+    name: string
+    activity_id: string
+}
+
+type EmissionEstimate = {
+    co2e: number
+    co2e_unit: string
+    emission_factor: EmissionFactor
+}
+
+type CalculationDetails = {
+    confidence: string
+    similarity_score: number
+}
+
+type SuggestApiResponse = {
+    error?: boolean
+    error_message?: string
+    error_code?: string
+    estimate?: EmissionEstimate
+    calculation_details?: CalculationDetails
+}
+
 type Props = {
     submittedActivity: ActivitySubmission | null
 }
@@ -9,7 +33,7 @@ type Props = {
 export const Autopilot = ({ submittedActivity }: Props) => {
     const { data, isLoading, error } = useQuery({
         queryKey: ["autopilot", submittedActivity],
-        queryFn: async (): Promise<any> => {
+        queryFn: async (): Promise<SuggestApiResponse> => {
             const res = await fetch(`/api/suggest`, {
                 method: "POST",
                 body: JSON.stringify(submittedActivity),
