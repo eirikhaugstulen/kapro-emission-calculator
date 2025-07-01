@@ -1,103 +1,117 @@
-import Image from "next/image";
+"use client"
+
+import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport } from "ai";
+import { CustomMessage } from "@/lib/ai";
+import { Message } from "@/components/message/message";
+import { ActivityForm, ActivitySubmission } from "@/components/activity-form/activity-form";
+import { Card, CardTitle, CardHeader } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Autopilot } from "@/components/autopilot";
+import { useEffect, useRef, useState } from "react";
+import { Loader2 } from "lucide-react";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [submittedActivity, setSubmittedActivity] = useState<ActivitySubmission | null>(null)
+  const lastSentActivity = useRef<ActivitySubmission | undefined>(undefined)
+  const { messages, sendMessage, setMessages, status, error } = useChat<CustomMessage>({
+    transport: new DefaultChatTransport({
+      api: "/api/chat",
+      prepareSendMessagesRequest: function ({ id, messages, trigger, messageId }) {
+        return {
+          body: {
+            submittedActivity: lastSentActivity.current,
+            messages: messages,
+            messageId: messageId,
+            id: id,
+            trigger: trigger,
+          }
+        }
+      },
+    }),
+  });
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const isLastMessage = (messageId: string) => {
+    return messageId === messages[messages.length - 1].id;
+  };
+
+  const handleSubmit = (data: ActivitySubmission) => {
+    setMessages([]);
+    setSubmittedActivity(data);
+  }
+
+  useEffect(() => {
+    if (submittedActivity?.activity && lastSentActivity.current !== submittedActivity) {
+      lastSentActivity.current = submittedActivity;
+      debugger;
+      sendMessage({
+        text: `Activity: "${submittedActivity.activity}"\nMeasurement: "${JSON.stringify(submittedActivity.measurement)}"`,
+        metadata: {
+          createdAt: new Date().toISOString(),
+          activity: submittedActivity.activity,
+          measurement: submittedActivity.measurement,
+        },
+      });
+    }
+  }, [submittedActivity]);
+
+  return (
+    <div className="h-screen p-8 flex flex-col">
+      <main className="max-w-[90%] mx-auto flex flex-col w-full">
+        <div className="flex flex-col gap-4 mb-8">
+          <h1 className="text-2xl font-bold text-center">
+            Utslippskalkulator
+          </h1>
+        </div>
+
+        <div className="flex flex-col md:flex-row flex-1 gap-2 overflow-y-auto overflow-x-hidden">
+          <Card className="w-full md:w-1/2">
+            <CardHeader>
+              <CardTitle>Alternativ 1</CardTitle>
+            </CardHeader>
+
+            <ScrollArea className="h-[calc(80vh-200px)] px-4">
+              {messages.map((message) => (
+                <Message
+                  key={message.id}
+                  message={message}
+                  isLastMessage={isLastMessage(message.id)}
+                />
+              ))}
+
+              {status === "submitted" && (
+                <div className="flex gap-2 items-center justify-center h-full">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                </div>
+              )}
+
+              {status === "error" && (
+                <div className="flex flex-col gap-2 items-center justify-center h-full">
+                  <p className="text-sm text-red-500">
+                    Noe gikk galt.
+                  </p>
+                  <p className="text-sm text-red-500">
+                    {error?.message}
+                  </p>
+                </div>
+              )}
+            </ScrollArea>
+          </Card>
+          <Card className="w-full md:w-1/2">
+            <CardHeader>
+              <CardTitle>Alternativ 2</CardTitle>
+            </CardHeader>
+
+            <ScrollArea className="h-[calc(80vh-200px)] px-4 overflow-x-auto">
+              <Autopilot submittedActivity={submittedActivity} />
+            </ScrollArea>
+          </Card>
+        </div>
+
+        <div className="mt-4">
+          <ActivityForm onSubmit={handleSubmit} />
         </div>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
     </div>
   );
 }
